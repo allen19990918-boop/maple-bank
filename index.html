@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>楓之谷銀行利率計算機</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+    background: #1a1a1a;
+    color: #f0e6c8;
+    display: flex;
+    justify-content: center;
+    padding: 32px 16px;
+    margin: 0;
+  }
+  .card {
+    background: #242424;
+    border: 1px solid #3a3a3a;
+    border-radius: 14px;
+    padding: 28px 24px;
+    max-width: 420px;
+    width: 100%;
+  }
+  h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 4px;
+    color: #ffd966;
+  }
+  p.sub {
+    font-size: 13px;
+    color: #999;
+    margin: 0 0 24px;
+  }
+  .row { margin-bottom: 20px; }
+  .row-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .row-top span:first-child { color: #bbb; }
+  .row-top span:last-child { font-weight: 600; color: #ffd966; }
+  input[type="range"] {
+    width: 100%;
+    accent-color: #ffd966;
+  }
+  .results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .stat {
+    background: #2f2a1a;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .stat .label { font-size: 12px; color: #b3a76a; margin-bottom: 4px; }
+  .stat .value { font-size: 22px; font-weight: 700; color: #ffd966; }
+  .total {
+    margin-top: 12px;
+    background: #2f2a1a;
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: center;
+    font-size: 14px;
+    color: #ddd;
+  }
+  .total b { color: #ffd966; }
+  .formula {
+    margin-top: 12px;
+    font-size: 11px;
+    color: #777;
+    line-height: 1.6;
+    border-top: 1px solid #3a3a3a;
+    padding-top: 12px;
+  }
+  .notice {
+    margin-top: 16px;
+    background: #4a1f1f;
+    border: 1px solid #a83232;
+    border-radius: 10px;
+    padding: 10px 14px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #ff8a8a;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>楓之谷銀行 · 利率計算機</h1>
+  <p class="sub">連續公式計算，金額與天數平滑遞增，無級距斷崖</p>
+
+  <div class="row">
+    <div class="row-top"><span>借款金額</span><span id="amt-out">1000G</span></div>
+    <input type="range" min="50" max="2000" step="10" value="1000" id="amt">
+  </div>
+
+  <div class="row">
+    <div class="row-top"><span>借款天數</span><span id="days-out">5天</span></div>
+    <input type="range" min="1" max="30" step="1" value="5" id="days">
+    <div id="days-note" style="font-size:11px;color:#a83232;margin-top:6px;display:none;">超過10天：500G以上會被BAN；500G以下僅供參考，實際天數請另談</div>
+  </div>
+
+  <div class="results">
+    <div class="stat">
+      <div class="label">利率</div>
+      <div class="value" id="rate-out">--%</div>
+    </div>
+    <div class="stat">
+      <div class="label">利息</div>
+      <div class="value" id="interest-out">--G</div>
+    </div>
+  </div>
+
+  <div class="total">到期共需歸還 <b id="total-out">--G</b></div>
+
+  <div class="notice">500G以上，最長10天內須還清，逾期將被BAN</div>
+
+  <div class="formula">
+    公式：利率 = 基礎利率(2%~16%，依天數) − 金額折扣(0%~8%，依金額)，下限 1%<br>
+    錨點：50G／1天 = 2%　　2000G／10天 = 8%<br>
+    500G以下借超過10天另談。
+  </div>
+</div>
+
+<script>
+const amtEl = document.getElementById('amt');
+const daysEl = document.getElementById('days');
+
+function update() {
+  const amt = parseInt(amtEl.value);
+  const days = parseInt(daysEl.value);
+  document.getElementById('amt-out').textContent = amt.toLocaleString() + 'G';
+  document.getElementById('days-out').textContent = days + '天';
+
+  const base = 2 + (days - 1) / 9 * 14;
+  const discount = (amt - 50) / 1950 * 8;
+  let rate = base - discount;
+  rate = Math.max(rate, 1);
+  rate = Math.round(rate * 10) / 10;
+
+  const interest = Math.round(amt * rate / 100);
+
+  document.getElementById('rate-out').textContent = rate.toFixed(1) + '%';
+  document.getElementById('interest-out').textContent = interest.toLocaleString() + 'G';
+  document.getElementById('total-out').textContent = (amt + interest).toLocaleString() + 'G';
+
+  document.getElementById('days-note').style.display = days > 10 ? 'block' : 'none';
+}
+
+amtEl.addEventListener('input', update);
+daysEl.addEventListener('input', update);
+update();
+</script>
+</body>
+</html>
